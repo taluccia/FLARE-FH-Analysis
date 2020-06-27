@@ -31,42 +31,111 @@ library(readr)
 ## Temerature
 
 ### Winter
+```{r}
+win_temp_path <- "../data/gee_perimeter/winter_temp"   # path to the data
+win_temp_files <- dir(win_temp_path, pattern = "*.csv") # get file names
+```
+
+```{r}
+win_temp_data <- win_temp_files %>%
+  # read in all the files, appending the path before the filename
+  map(~ read_csv(file.path(win_temp_path, .))) %>% 
+  reduce(rbind)
+win_temp_data
+```
 
 ### Spring
-files <- list.files(path = "../data/gee_perimeter/spring_temp", pattern = "*.csv")
-files
+
 ```{r}
-
-
-data_path <- "../data/gee_perimeter/spring_temp"   # path to the data
-files <- dir(data_path, pattern = "*.csv") # get file names
+spr_temp_path <- "../data/gee_perimeter/spring_temp"   # path to the data
+spr_temp_files <- dir(spr_temp_path, pattern = "*.csv") # get file names
 ```
 
 ```{r}
-data <- files %>%
+spr_temp_data <- spr_temp_files %>%
   # read in all the files, appending the path before the filename
-  map(~ read_csv(file.path(data_path, .))) %>% 
+  map(~ read_csv(file.path(spr_temp_path, .))) %>% 
   reduce(rbind)
-data
+spr_temp_data
 ```
 
+### Summer
 
-```{r eval=FALSE, include=FALSE}
-spt2001= read.csv("../data/gee_perimeter/2001_fires_spring_temp.csv")
-spt2002= read.csv("../data/gee_perimeter/2002_fires_spring_temp.csv")
-spt2003= read.csv("../data/gee_perimeter/2003_fires_spring_temp.csv")
-spt2004= read.csv("../data/gee_perimeter/2004_fires_spring_temp.csv")
-spt2005= read.csv("../data/gee_perimeter/2005_fires_spring_temp.csv")
-spt2006= read.csv("../data/gee_perimeter/2006_fires_spring_temp.csv")
-spt2007= read.csv("../data/gee_perimeter/2007_fires_spring_temp.csv")
-spt2008= read.csv("../data/gee_perimeter/2001_fires_spring_temp.csv")
-spt2009= read.csv("../data/gee_perimeter/2001_fires_spring_temp.csv")
-spt2010= read.csv("../data/gee_perimeter/2001_fires_spring_temp.csv")
-spt2011= read.csv("../data/gee_perimeter/2001_fires_spring_temp.csv")
+```{r}
+smr_temp_path <- "../data/gee_perimeter/summer_temp"   # path to the data
+smr_temp_files <- dir(smr_temp_path, pattern = "*.csv") # get file names
 ```
+
+```{r}
+smr_temp_data <- smr_temp_files %>%
+  # read in all the files, appending the path before the filename
+  map(~ read_csv(file.path(smr_temp_path, .))) %>% 
+  reduce(rbind)
+smr_temp_data
+```
+
 
 
 ## Precipitation
 
 
+### Winter
+```{r}
+win_pr_path <- "../data/gee_perimeter/winter_pr"   # path to the data
+win_pr_files <- dir(win_pr_path, pattern = "*.csv") # get file names
+```
+
+```{r}
+win_pr_data <- win_pr_files %>%
+  # read in all the files, appending the path before the filename
+  map(~ read_csv(file.path(win_pr_path, .))) %>% 
+  reduce(rbind)
+win_pr_data
+```
+
+### Spring
+
+```{r}
+spr_pr_path <- "../data/gee_perimeter/spring_pr"   # path to the data
+spr_pr_files <- dir(spr_pr_path, pattern = "*.csv") # get file names
+```
+
+```{r}
+spr_pr_data <- spr_pr_files %>%
+  # read in all the files, appending the path before the filename
+  map(~ read_csv(file.path(spr_pr_path, .))) %>% 
+  reduce(rbind)
+spr_pr_data
+```
+
+### Summer
+
+```{r}
+smr_pr_path <- "../data/gee_perimeter/summer_pr"   # path to the data
+smr_pr_files <- dir(smr_pr_path, pattern = "*.csv") # get file names
+```
+
+```{r}
+smr_pr_data <- smr_pr_files %>%
+  # read in all the files, appending the path before the filename
+  map(~ read_csv(file.path(smr_pr_path, .))) %>% 
+  reduce(rbind)
+smr_pr_data
+```
+
+
 ## Snow
+
+
+```{r}
+snow_path <- "../data/gee_perimeter/snow_off"   # path to the data
+snow_files <- dir(snow_path, pattern = "*.csv") # get file names
+```
+
+```{r}
+snow_data <- snow_files %>%
+  # read in all the files, appending the path before the filename
+  map(~ read_csv(file.path(snow_path, .))) %>% 
+  reduce(rbind)
+snow_data
+```
