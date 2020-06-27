@@ -1,0 +1,138 @@
+---
+title: "Area Burned Analysis"
+author: "Anna Talucci"
+date: "June 27, 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Overview
+
+Analysis for area burned
+
+https://towardsdatascience.com/random-forest-in-r-f66adf80ec9
+
+https://uc-r.github.io/random_forests
+
+# Packages
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(randomForest)
+require(caTools)
+
+```
+
+
+
+# Data
+```{r}
+data = read.csv("../data/fire_climate_data.csv")
+```
+
+```{r}
+head(data)
+```
+
+```{r}
+sapply(data, class)
+```
+
+```{r}
+data = data %>% transform(fire_yr=as.factor(fire_yr)) %>% dplyr::select(area_ha, fire_yr:calDoy)
+sapply(data, class)
+```
+
+```{r}
+summary(data)
+```
+
+```{r}
+sample = sample.split(data$area_ha, SplitRatio = .75)
+train = subset(data, sample == TRUE)
+test  = subset(data, sample == FALSE)
+dim(train)
+dim(test)
+```
+
+```{r}
+head(train)
+```
+
+```{r}
+set.seed(123)
+ames_split <- initial_split(AmesHousing::make_ames(), prop = .7)
+ames_train <- training(ames_split)
+ames_test  <- testing(ames_split)
+```
+
+```{r}
+
+# for reproduciblity
+set.seed(123)
+
+# default RF model
+m1 <- randomForest(
+  formula = area_ha ~ .,
+  data    = train
+)
+
+m1
+```
+
+```{r}
+plot(m1)
+```
+
+```{r}
+# number of trees with lowest MSE
+which.min(m1$mse)
+## [1] 344
+
+# RMSE of this optimal random forest
+sqrt(m1$mse[which.min(m1$mse)])
+## [1] 25673.5
+```
+
+```{r}
+# create training and validation data 
+set.seed(123)
+valid_split <- initial_split(train, .8)
+
+# training data
+train_v2 <- analysis(valid_split)
+
+# validation data
+valid <- assessment(valid_split)
+x_test <- ames_valid[setdiff(names(valid), "Area burned (ha)")]
+y_test <- ames_valid$area_ha
+
+rf_oob_comp <- randomForest(
+  formula = area_ha ~ .,
+  data    = train_v2,
+  xtest   = x_test,
+  ytest   = y_test
+)
+
+# extract OOB & validation errors
+oob <- sqrt(rf_oob_comp$mse)
+validation <- sqrt(rf_oob_comp$test$mse)
+
+# compare error rates
+tibble::tibble(
+  `Out of Bag Error` = oob,
+  `Test error` = validation,
+  ntrees = 1:rf_oob_comp$ntree
+) %>%
+  gather(Metric, RMSE, -ntrees) %>%
+  ggplot(aes(ntrees, RMSE, color = Metric)) +
+  geom_line() +
+  scale_y_continuous(labels = "ha") +
+  xlab("Number of trees")
+```
+
