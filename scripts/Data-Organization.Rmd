@@ -291,6 +291,10 @@ df_climate1 = df_climate %>%
 df_climate1
 ```
 
+```{r eval=FALSE, include=FALSE}
+write.csv(df_climate1,"../outputs/fire_climate_data.csv", row.names = FALSE)
+```
+
 # Summarize data
 
 ```{r}
