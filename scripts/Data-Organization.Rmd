@@ -1,0 +1,39 @@
+---
+title: "Data Organization"
+author: "Anna Talucci"
+date: "June 27, 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# overview
+
+
+
+# Packages
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+```
+
+
+
+# Data
+
+## Temerature
+
+```{r}
+temp2001= read.csv("../data/field/site_info_2018-2019.csv")
+```
+
+
+## Precipitation
+
+
+## Snow
