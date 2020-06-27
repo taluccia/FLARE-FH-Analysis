@@ -285,9 +285,179 @@ df_climate1 = df_climate %>%
   mutate(wtr_temp = wtr_temp*temp_scale, .keep = "none") %>%
   mutate(spr_temp = spr_temp*temp_scale, .keep = "none") %>%
   mutate(smr_temp = smr_temp*temp_scale, .keep = "none") %>%
-  dplyr::select(-temp_scale, -.keep)
+  dplyr::select(-temp_scale, -.keep) %>%
+  mutate(fire_yr = as.factor(fire_yr))
 
 df_climate1
 ```
 
+# Summarize data
+
+```{r}
+mean_climate = df_climate1 %>%
+  group_by(fire_yr) %>%
+  summarise_at(c("area_ha", "wtr_temp", "spr_temp", "smr_temp", "wtr_pr", "spr_pr", "smr_pr", "calDoy"), funs(c(mean, sd)), na.rm = TRUE)
+mean_climate
+```
+```{r}
+df_sum = df_climate1 %>% group_by(fire_yr) %>%
+  select(area_ha, wtr_temp, spr_temp, smr_temp, wtr_pr, spr_pr, smr_pr, calDoy) %>% # select variables to summarise
+  summarise_each(funs(min = min, 
+                      q25 = quantile(., 0.25), 
+                      median = median, 
+                      q75 = quantile(., 0.75), 
+                      max = max,
+                      mean = mean, 
+                      sd = sd))
+
+head(df_sum)
+```
+
+# Define graph Theme and color Palette 
+
+```{r}
+boxplot_theme = theme_bw() + theme(legend.position = "none") +  
+  theme(panel.grid.major = element_blank()) +
+    theme(axis.title.y = element_text(size = 11, hjust = 0.5, vjust = 1.1),
+        axis.text.x = element_text(size = 10, color = "black"),
+        axis.text.y = element_text(size = 10, color = "black"),
+        axis.line = element_line(colour = "black"))
+```
+theme(panel.grid = element_blank(),
+        panel.border = element_blank())
+```{r}
+reg_theme = theme_bw() + theme(legend.position = "none") +
+  theme(plot.margin = unit(c(t = 0.3, r = 0.3, b = 0.3, l = 0.1), "cm")) +
+  theme(axis.title.x = element_text(size = 10, hjust = 0.5, vjust = -0.2),
+        axis.title.y = element_text(size = 10, hjust = 0.5, vjust = 1.1),
+        axis.text.x = element_text(size = 9, color = "black"),
+        axis.text.y = element_text(size = 9, color = "black"),
+        panel.background = element_blank(), 
+        axis.line = element_line(colour = "black"))
+```
+
+
+
 # Visualize data
+
+## Boxplots all varaibles
+
+```{r}
+ggplot(df_climate1, aes(x = fire_yr, y = wtr_temp)) +
+  geom_boxplot() +
+  boxplot_theme
+```
+
+```{r}
+ggplot(df_climate1, aes(x = fire_yr, y = spr_temp)) +
+  geom_boxplot() +
+  boxplot_theme
+```
+
+```{r}
+ggplot(df_climate1, aes(x = fire_yr, y = smr_temp)) +
+  geom_boxplot() +
+  boxplot_theme
+```
+
+```{r}
+ggplot(df_climate1, aes(x = fire_yr, y = wtr_pr)) +
+  geom_boxplot() +
+  boxplot_theme
+```
+
+```{r}
+ggplot(df_climate1, aes(x = fire_yr, y = spr_pr)) +
+  geom_boxplot() +
+  boxplot_theme
+```
+
+```{r}
+ggplot(df_climate1, aes(x = fire_yr, y = smr_pr)) +
+  geom_boxplot() +
+  boxplot_theme
+```
+
+```{r}
+ggplot(df_climate1, aes(x = fire_yr, y = calDoy)) +
+  geom_boxplot() +
+  boxplot_theme
+```
+
+## Bar plot of means 
+```{r}
+head(df_sum)
+```
+
+ 
+## Winter
+
+```{r}
+ggplot(df_sum, aes(x = fire_yr, y = wtr_temp_mean)) +
+  geom_bar(stat="identity", color="black") +
+  geom_errorbar(aes(ymin=wtr_temp_mean-wtr_temp_sd, ymax=wtr_temp_mean+wtr_temp_sd), width=.2) +
+  boxplot_theme
+```   
+
+
+
+```{r}
+ggplot(df_climate1, aes(x = fire_yr, y = wtr_temp)) +
+  geom_bar(stat = "summary_bin", fun = mean) +
+  boxplot_theme
+```
+## Spring Temp
+```{r}
+ggplot(df_sum, aes(x = fire_yr, y = spr_temp_mean)) +
+  geom_bar(stat="identity", color="black") +
+  geom_errorbar(aes(ymin=spr_temp_mean-spr_temp_sd, ymax=spr_temp_mean+spr_temp_sd), width=.2) +
+  boxplot_theme
+```   
+```{r}
+ggplot(df_climate1, aes(x = fire_yr, y = spr_temp)) +
+  geom_bar(stat = "summary_bin", fun = mean) +
+  boxplot_theme
+```
+## SUmmer Temp
+```{r}
+ggplot(df_sum, aes(x = fire_yr, y = smr_temp_mean)) +
+  geom_bar(stat="identity", color="black") +
+  geom_errorbar(aes(ymin=smr_temp_mean-smr_temp_sd, ymax=smr_temp_mean+smr_temp_sd), width=.2) +
+  boxplot_theme
+```   
+```{r}
+ggplot(mean_climate, aes(x = fire_yr, y = smr_temp)) +
+  geom_bar() +
+  boxplot_theme
+```
+
+## Winter Precip
+
+```{r}
+ggplot(mean_climate, aes(x = fire_yr, y = wtr_pr)) +
+  geom_bar() +
+  boxplot_theme
+```
+
+## Spring Precip
+
+```{r}
+ggplot(mean_climate, aes(x = fire_yr, y = spr_pr)) +
+  geom_bar() +
+  boxplot_theme
+```
+
+## Summer Precip
+```{r}
+ggplot(mean_climate, aes(x = fire_yr, y = smr_pr)) +
+  geom_bar() +
+  boxplot_theme
+```
+
+## Snow off
+
+```{r}
+ggplot(mean_climate, aes(x = fire_yr, y = calDoy)) +
+  geom_bar() +
+  boxplot_theme
+```
