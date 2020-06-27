@@ -12,7 +12,12 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # overview
 
+GEE data 
 
+Climate data from Terra Climate 
+
+Temperature (degrees celcius) scale = 0.1
+precipitation (mm) no scaling
 
 # Packages
 
@@ -31,6 +36,7 @@ library(readr)
 ## Temerature
 
 ### Winter
+
 ```{r}
 win_temp_path <- "../data/gee_perimeter/winter_temp"   # path to the data
 win_temp_files <- dir(win_temp_path, pattern = "*.csv") # get file names
@@ -43,6 +49,20 @@ win_temp_data <- win_temp_files %>%
   reduce(rbind)
 win_temp_data
 ```
+
+```{r}
+win_temp_data %>% summarise_all(~ sum(is.na(.)))
+```
+
+```{r}
+win_temp_sel = win_temp_data %>% 
+                      dplyr::select(ID_obj:mean) %>%
+                      rename(wtr_temp = mean)
+                      
+
+head(win_temp_sel)
+```
+
 
 ### Spring
 
@@ -59,6 +79,17 @@ spr_temp_data <- spr_temp_files %>%
 spr_temp_data
 ```
 
+```{r}
+spr_temp_data %>% summarise_all(~ sum(is.na(.)))
+```
+
+```{r}
+spr_temp_sel = spr_temp_data %>% 
+                      dplyr::select(ID_obj:mean) %>%
+                      rename(spr_temp = mean)
+head(spr_temp_sel)
+```
+
 ### Summer
 
 ```{r}
@@ -73,7 +104,26 @@ smr_temp_data <- smr_temp_files %>%
   reduce(rbind)
 smr_temp_data
 ```
+```{r}
+smr_temp_data %>% summarise_all(~ sum(is.na(.)))
+```
+```{r}
+smr_temp_sel = smr_temp_data %>% 
+                      dplyr::select(ID_obj:mean) %>%
+                      rename(smr_temp = mean)
+head(smr_temp_sel)
+```
 
+### Combine Temperature data
+
+```{r}
+temp_w_sp = merge(win_temp_sel, spr_temp_sel, by = c("ID_obj", "area_ha", "area_m", "fire_yr"))
+df_temp = merge(temp_w_sp, smr_temp_sel, by = c("ID_obj", "area_ha", "area_m", "fire_yr"))
+```
+
+```{r}
+df_temp
+```
 
 
 ## Precipitation
@@ -93,6 +143,17 @@ win_pr_data <- win_pr_files %>%
 win_pr_data
 ```
 
+```{r}
+win_pr_data %>% summarise_all(~ sum(is.na(.)))
+```
+
+```{r}
+win_pr_sel = win_pr_data %>% 
+                      dplyr::select(ID_obj:mean) %>%
+                      rename(wtr_pr = mean)
+head(win_pr_sel)
+```
+
 ### Spring
 
 ```{r}
@@ -106,6 +167,17 @@ spr_pr_data <- spr_pr_files %>%
   map(~ read_csv(file.path(spr_pr_path, .))) %>% 
   reduce(rbind)
 spr_pr_data
+```
+
+```{r}
+spr_pr_data %>% summarise_all(~ sum(is.na(.)))
+```
+
+```{r}
+spr_pr_sel = spr_pr_data %>% 
+                      dplyr::select(ID_obj:mean) %>%
+                      rename(spr_pr = mean)
+head(spr_pr_sel)
 ```
 
 ### Summer
@@ -123,6 +195,38 @@ smr_pr_data <- smr_pr_files %>%
 smr_pr_data
 ```
 
+```{r}
+smr_pr_data %>% summarise_all(~ sum(is.na(.)))
+```
+
+```{r}
+smr_pr_sel = smr_pr_data %>% 
+                      dplyr::select(ID_obj:mean) %>%
+                      rename(smr_pr = mean)
+head(smr_pr_sel)
+```
+
+### Combine PR data
+
+```{r}
+pr_w_sp = merge(win_pr_sel, spr_pr_sel, by = c("ID_obj", "area_ha", "area_m", "fire_yr"))
+df_pr = merge(pr_w_sp, smr_pr_sel, by = c("ID_obj", "area_ha", "area_m", "fire_yr"))
+```
+
+```{r}
+df_pr
+```
+
+## Combine Temp and PR
+
+```{r}
+df_temp_pr = merge(df_temp, df_pr, by = c("ID_obj", "area_ha", "area_m", "fire_yr"))
+
+```
+
+```{r}
+df_temp_pr
+```
 
 ## Snow
 
@@ -139,3 +243,51 @@ snow_data <- snow_files %>%
   reduce(rbind)
 snow_data
 ```
+
+```{r}
+snow_data %>% summarise_all(~ sum(is.na(.)))
+```
+
+```{r}
+snow_sel = snow_data %>% 
+                      dplyr::select(ID_obj:year) 
+head(snow_sel)
+```
+
+## Combine Temp Precip and snow
+
+```{r}
+df_climate = merge(df_temp_pr, snow_sel, by = c("ID_obj", "area_ha", "area_m", "fire_yr"))
+
+```
+
+```{r}
+df_climate
+```
+
+```{r}
+df_climate %>% summarise_all(~ sum(is.na(.)))
+```
+
+```{r}
+na_data <- df_climate %>% filter_all(any_vars(is.na(.))) 
+na_data
+```
+
+# Clean data
+- Remove NA
+- Scale temperature data
+
+```{r}
+df_climate1 = df_climate %>% 
+  na.omit() %>%
+  mutate(temp_scale = 0.1) %>%
+  mutate(wtr_temp = wtr_temp*temp_scale, .keep = "none") %>%
+  mutate(spr_temp = spr_temp*temp_scale, .keep = "none") %>%
+  mutate(smr_temp = smr_temp*temp_scale, .keep = "none") %>%
+  dplyr::select(-temp_scale, -.keep)
+
+df_climate1
+```
+
+# Visualize data
