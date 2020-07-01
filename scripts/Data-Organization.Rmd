@@ -27,6 +27,8 @@ library(tidyr)
 library(ggplot2)
 library(purrr)
 library(readr)
+library(cowplot)
+library(ggcorrplot)
 ```
 
 
@@ -285,8 +287,9 @@ df_climate1 = df_climate %>%
   mutate(wtr_temp = wtr_temp*temp_scale, .keep = "none") %>%
   mutate(spr_temp = spr_temp*temp_scale, .keep = "none") %>%
   mutate(smr_temp = smr_temp*temp_scale, .keep = "none") %>%
-  dplyr::select(-temp_scale, -.keep) %>%
-  mutate(fire_yr = as.factor(fire_yr))
+  mutate(fire_yr = as.factor(fire_yr), .keep = "none") %>%
+  dplyr::select(-temp_scale, -.keep) 
+
 
 df_climate1
 ```
@@ -297,12 +300,6 @@ write.csv(df_climate1,"../outputs/fire_climate_data.csv", row.names = FALSE)
 
 # Summarize data
 
-```{r}
-mean_climate = df_climate1 %>%
-  group_by(fire_yr) %>%
-  summarise_at(c("area_ha", "wtr_temp", "spr_temp", "smr_temp", "wtr_pr", "spr_pr", "smr_pr", "calDoy"), funs(c(mean, sd)), na.rm = TRUE)
-mean_climate
-```
 ```{r}
 df_sum = df_climate1 %>% group_by(fire_yr) %>%
   select(area_ha, wtr_temp, spr_temp, smr_temp, wtr_pr, spr_pr, smr_pr, calDoy) %>% # select variables to summarise
@@ -347,46 +344,59 @@ reg_theme = theme_bw() + theme(legend.position = "none") +
 ## Boxplots all varaibles
 
 ```{r}
-ggplot(df_climate1, aes(x = fire_yr, y = wtr_temp)) +
+plot1 = ggplot(df_climate1, aes(x = fire_yr, y = wtr_temp)) +
   geom_boxplot() +
   boxplot_theme
+
+plot1
 ```
 
 ```{r}
-ggplot(df_climate1, aes(x = fire_yr, y = spr_temp)) +
+plot2 = ggplot(df_climate1, aes(x = fire_yr, y = spr_temp)) +
   geom_boxplot() +
   boxplot_theme
+
+plot2 
 ```
 
 ```{r}
-ggplot(df_climate1, aes(x = fire_yr, y = smr_temp)) +
+plot3 = ggplot(df_climate1, aes(x = fire_yr, y = smr_temp)) +
   geom_boxplot() +
   boxplot_theme
+
+plot3
 ```
 
 ```{r}
-ggplot(df_climate1, aes(x = fire_yr, y = wtr_pr)) +
+plot4 = ggplot(df_climate1, aes(x = fire_yr, y = wtr_pr)) +
   geom_boxplot() +
   boxplot_theme
+
+plot4
 ```
 
 ```{r}
-ggplot(df_climate1, aes(x = fire_yr, y = spr_pr)) +
+plot5 = ggplot(df_climate1, aes(x = fire_yr, y = spr_pr)) +
   geom_boxplot() +
   boxplot_theme
+plot5
 ```
 
 ```{r}
-ggplot(df_climate1, aes(x = fire_yr, y = smr_pr)) +
+plot6 = ggplot(df_climate1, aes(x = fire_yr, y = smr_pr)) +
   geom_boxplot() +
   boxplot_theme
+plot6
 ```
 
 ```{r}
-ggplot(df_climate1, aes(x = fire_yr, y = calDoy)) +
+plot7 = ggplot(df_climate1, aes(x = fire_yr, y = calDoy)) +
   geom_boxplot() +
   boxplot_theme
+plot7
 ```
+
+
 
 ## Bar plot of means 
 ```{r}
@@ -429,39 +439,39 @@ ggplot(df_sum, aes(x = fire_yr, y = smr_temp_mean)) +
   geom_errorbar(aes(ymin=smr_temp_mean-smr_temp_sd, ymax=smr_temp_mean+smr_temp_sd), width=.2) +
   boxplot_theme
 ```   
+
+# Coorelations
 ```{r}
-ggplot(mean_climate, aes(x = fire_yr, y = smr_temp)) +
-  geom_bar() +
-  boxplot_theme
+head(df_climate1)
 ```
 
-## Winter Precip
 
 ```{r}
-ggplot(mean_climate, aes(x = fire_yr, y = wtr_pr)) +
-  geom_bar() +
-  boxplot_theme
+df_climate1_corr = df_climate1 %>%
+  dplyr::select(area_ha, wtr_temp:calDoy, year)
+
+corr = round(cor(df_climate1_corr), 1)  
+p_mat <- round(cor_pmat(df_climate1_corr), 3)
+p_mat
 ```
 
-## Spring Precip
-
-```{r}
-ggplot(mean_climate, aes(x = fire_yr, y = spr_pr)) +
-  geom_bar() +
-  boxplot_theme
+```{r fig.height=6, fig.width=6}
+cor_plot = ggcorrplot(corr)
+cor_plot
+```
+```{r eval=FALSE, include=FALSE}
+ggsave("../figures/2020-07-01_CorrPlot-Temp-PR-Snowoff.jpeg", plot = cor_plot, width = 6, height = 6, units = c("in"), dpi=600 )
 ```
 
-## Summer Precip
-```{r}
-ggplot(mean_climate, aes(x = fire_yr, y = smr_pr)) +
-  geom_bar() +
-  boxplot_theme
+# Combine plots
+
+```{r fig.height=11, fig.width=12}
+vis1 = cowplot::plot_grid(plot1, plot4, plot2, plot5, plot3, plot6, plot7,  labels = "AUTO", align = "hv", label_size = 12, ncol= 2) + 
+  theme(plot.margin = margin(0, 0, 0, 0)) 
+
+vis1
 ```
 
-## Snow off
-
-```{r}
-ggplot(mean_climate, aes(x = fire_yr, y = calDoy)) +
-  geom_bar() +
-  boxplot_theme
+```{r eval=FALSE, include=FALSE}
+ggsave("../figures/2020-07-01_Boxplot-Temp-PR-Snowoff.jpeg", plot = vis1, width = 12, height = 11, units = c("in"), dpi=600 )
 ```
