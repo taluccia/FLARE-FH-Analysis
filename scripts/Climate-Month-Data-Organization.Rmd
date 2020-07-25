@@ -20,6 +20,27 @@ Temperature (degrees celcius) scale = 0.1
 precipitation (mm) no scaling
 
 Monthly data
+***
+[Terra Climate](https://developers.google.com/earth-engine/datasets/catalog/IDAHO_EPSCOR_TERRACLIMATE)
+
+Name  |	Units	| Scale	| Description
+------|-------|-------|------------
+aet	  | mm	  |	0.1	  | Actual evapotranspiration,  
+def	  | mm	  |	0.1	  | Climate water deficit, 
+pdsi	|       |	0.01	| Palmer Drought Severity Index
+pet	  | mm	  |	0.1	  | Reference evapotranspiration (ASCE Penman-Montieth)
+pr	  | mm		|	      | Precipitation accumulation
+ro	  | mm	  |       |	Runoff, derived using a one-dimensional soil water balance model
+soil	| mm	  | 0.1	  | Soil moisture, derived using a one-dimensional soil water balance model
+srad	| W/m^2	|	0.1	  | Downward surface shortwave radiation
+swe	  | mm	  |		    | Snow water equivalent, 
+tmmn	| °C	  |	0.1	  | Minimum temperature
+tmmx	| °C	  |	0.1	  | Maximum temperature
+vap	  | kPa	  |	0.001	| Vapor pressure
+vpd   |	kPa	  |	0.01	| Vapor pressure deficit
+vs	  | m/s	  |	0.01	| Wind-speed at 10m
+
+***
 
 # Packages
 
@@ -31,6 +52,29 @@ library(purrr)
 library(readr)
 library(cowplot)
 library(ggcorrplot)
+```
+
+# Define graph Theme and color Palette 
+
+```{r}
+boxplot_theme = theme_bw() + theme(legend.position = "none") +  
+  theme(panel.grid.major = element_blank()) +
+    theme(axis.title.y = element_text(size = 11, hjust = 0.5, vjust = 1.1),
+        axis.text.x = element_text(size = 10, color = "black"),
+        axis.text.y = element_text(size = 10, color = "black"),
+        axis.line = element_line(colour = "black"))
+```
+theme(panel.grid = element_blank(),
+        panel.border = element_blank())
+```{r}
+reg_theme = theme_bw() + theme(legend.position = "none") +
+  theme(plot.margin = unit(c(t = 0.3, r = 0.3, b = 0.3, l = 0.1), "cm")) +
+  theme(axis.title.x = element_text(size = 10, hjust = 0.5, vjust = -0.2),
+        axis.title.y = element_text(size = 10, hjust = 0.5, vjust = 1.1),
+        axis.text.x = element_text(size = 9, color = "black"),
+        axis.text.y = element_text(size = 9, color = "black"),
+        panel.background = element_blank(), 
+        axis.line = element_line(colour = "black"))
 ```
 
 
@@ -78,19 +122,6 @@ df1
 
 
 
-
-```{r}
-win_temp_data %>% summarise_all(~ sum(is.na(.)))
-```
-
-```{r}
-win_temp_sel = win_temp_data %>% 
-                      dplyr::select(ID_obj:mean) %>%
-                      rename(wtr_temp = mean)
-                      
-
-head(win_temp_sel)
-```
 
 
 ## Snow
@@ -147,19 +178,17 @@ head(df1)
 ```
 
 ```{r}
-df1 %>% 
+df2 = df1 %>% 
   na.omit() %>%
   mutate(tmmx_scale = 0.1) %>%
   mutate(tmp_mx = tmmx*tmmx_scale) %>%
   mutate(fire_yr = as.factor(fire_yr))
 
 
-
+df2
 ```
 
-```{r eval=FALSE, include=FALSE}
-write.csv(df_climate1,"../outputs/fire_climate_data.csv", row.names = FALSE)
-```
+
 
 # Summarize data
 
@@ -177,29 +206,6 @@ df_sum = df_climate1 %>% group_by(fire_yr) %>%
 head(df_sum)
 ```
 
-# Define graph Theme and color Palette 
-
-```{r}
-boxplot_theme = theme_bw() + theme(legend.position = "none") +  
-  theme(panel.grid.major = element_blank()) +
-    theme(axis.title.y = element_text(size = 11, hjust = 0.5, vjust = 1.1),
-        axis.text.x = element_text(size = 10, color = "black"),
-        axis.text.y = element_text(size = 10, color = "black"),
-        axis.line = element_line(colour = "black"))
-```
-theme(panel.grid = element_blank(),
-        panel.border = element_blank())
-```{r}
-reg_theme = theme_bw() + theme(legend.position = "none") +
-  theme(plot.margin = unit(c(t = 0.3, r = 0.3, b = 0.3, l = 0.1), "cm")) +
-  theme(axis.title.x = element_text(size = 10, hjust = 0.5, vjust = -0.2),
-        axis.title.y = element_text(size = 10, hjust = 0.5, vjust = 1.1),
-        axis.text.x = element_text(size = 9, color = "black"),
-        axis.text.y = element_text(size = 9, color = "black"),
-        panel.background = element_blank(), 
-        axis.line = element_line(colour = "black"))
-```
-
 
 
 # Visualize data
@@ -207,112 +213,62 @@ reg_theme = theme_bw() + theme(legend.position = "none") +
 ## Boxplots all varaibles
 
 ```{r}
-plot1 = ggplot(df_climate1, aes(x = fire_yr, y = wtr_temp)) +
+plot1 = ggplot(df2, aes(x = fire_yr, y = tmp_mx, color=climate_mon)) +
   geom_boxplot() +
-  boxplot_theme
+  theme_bw()
 
 plot1
 ```
 
 ```{r}
-plot2 = ggplot(df_climate1, aes(x = fire_yr, y = spr_temp)) +
+plot2 = ggplot(df2, aes(x = fire_yr, y = pr, color=climate_mon)) +
   geom_boxplot() +
-  boxplot_theme
+  theme_bw()
 
-plot2 
-```
-
-```{r}
-plot3 = ggplot(df_climate1, aes(x = fire_yr, y = smr_temp)) +
-  geom_boxplot() +
-  boxplot_theme
-
-plot3
-```
-
-```{r}
-plot4 = ggplot(df_climate1, aes(x = fire_yr, y = wtr_pr)) +
-  geom_boxplot() +
-  boxplot_theme
-
-plot4
-```
-
-```{r}
-plot5 = ggplot(df_climate1, aes(x = fire_yr, y = spr_pr)) +
-  geom_boxplot() +
-  boxplot_theme
-plot5
-```
-
-```{r}
-plot6 = ggplot(df_climate1, aes(x = fire_yr, y = smr_pr)) +
-  geom_boxplot() +
-  boxplot_theme
-plot6
-```
-
-```{r}
-plot7 = ggplot(df_climate1, aes(x = fire_yr, y = calDoy)) +
-  geom_boxplot() +
-  boxplot_theme
-plot7
-```
-
-
-
-## Bar plot of means 
-```{r}
-head(df_sum)
+plot2
 ```
 
  
-## Winter
-
-```{r}
-ggplot(df_sum, aes(x = fire_yr, y = wtr_temp_mean)) +
-  geom_bar(stat="identity", color="black") +
-  geom_errorbar(aes(ymin=wtr_temp_mean-wtr_temp_sd, ymax=wtr_temp_mean+wtr_temp_sd), width=.2) +
-  boxplot_theme
-```   
-
-
-
-```{r}
-ggplot(df_climate1, aes(x = fire_yr, y = wtr_temp)) +
-  geom_bar(stat = "summary_bin", fun = mean) +
-  boxplot_theme
-```
-## Spring Temp
-```{r}
-ggplot(df_sum, aes(x = fire_yr, y = spr_temp_mean)) +
-  geom_bar(stat="identity", color="black") +
-  geom_errorbar(aes(ymin=spr_temp_mean-spr_temp_sd, ymax=spr_temp_mean+spr_temp_sd), width=.2) +
-  boxplot_theme
-```   
-```{r}
-ggplot(df_climate1, aes(x = fire_yr, y = spr_temp)) +
-  geom_bar(stat = "summary_bin", fun = mean) +
-  boxplot_theme
-```
-## SUmmer Temp
-```{r}
-ggplot(df_sum, aes(x = fire_yr, y = smr_temp_mean)) +
-  geom_bar(stat="identity", color="black") +
-  geom_errorbar(aes(ymin=smr_temp_mean-smr_temp_sd, ymax=smr_temp_mean+smr_temp_sd), width=.2) +
-  boxplot_theme
-```   
 
 # Coorelations
 ```{r}
-head(df_climate1)
+head(df2)
+
 ```
 
+mutate(gradebook, letter = ifelse(grade %in% 60:69, "D",
+                                     ifelse(grade %in% 70:79, "C",
+                                            ifelse(grade %in% 80:89, "B",
+                                                   ifelse(grade %in% 90:99, "A", "F")))))
+```{r}
+spec1 <- df1 %>%
+  build_wider_spec(names_from = variable, values_from = c(estimate, moe))
+spec1
+```
+                                  
+```{r}
+spec2 = spec1 %>%
+  mutate(.name = paste0(variable, ifelse(.value == "apr", "_apr",
+                                         ifelse(.value == "may", "_may",
+                                                ifelse(.value == "jun", "_jun",
+                                                       ifelse(.value == "jul", "_jul",
+                                                              ifelse(.value == "aug", "_aug")))))))
+  
+```
 
 ```{r}
-df_climate1_corr = df_climate1 %>%
-  dplyr::select(area_ha, wtr_temp:calDoy, year)
+spec2 <- spec1 %>%
+  mutate(.name = paste0(variable, ifelse(.value == "moe", "_moe", "")))
+```
+```{r}
+df_climate1_corr = df2 %>%
+  mutate(year = as.numeric(climate_yr)) %>%
+  dplyr::select(area_ha, tmp_mx, pr, year)
 
+str(df_climate1_corr,)
+```
+
+```{r}
 corr = round(cor(df_climate1_corr), 1)  
 p_mat <- round(cor_pmat(df_climate1_corr), 3)
 p_mat
