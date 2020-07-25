@@ -20,7 +20,10 @@ Temperature (degrees celcius) scale = 0.1
 precipitation (mm) no scaling
 
 Monthly data
+
+
 ***
+# Data Details
 [Terra Climate](https://developers.google.com/earth-engine/datasets/catalog/IDAHO_EPSCOR_TERRACLIMATE)
 
 Name  |	Units	| Scale	| Description
@@ -174,14 +177,14 @@ na_data
 - Remove NA
 - Scale temperature data
 ```{r}
-head(df1)
+df1
 ```
 
 ```{r}
 df2 = df1 %>% 
   na.omit() %>%
-  mutate(tmmx_scale = 0.1) %>%
-  mutate(tmp_mx = tmmx*tmmx_scale) %>%
+  mutate(tmmx= tmmx*0.1) %>%
+  mutate(def = def*0.1) %>%
   mutate(fire_yr = as.factor(fire_yr))
 
 
@@ -236,30 +239,43 @@ head(df2)
 
 ```
 
+```{r}
+qplot(data = df2, x=climate_yr, y=def, color = climate_mon)
+```
+
+
+```{r}
+qplot(data = df2, x=climate_yr, y=tmmx, color = climate_mon)
+```
+
+```{r}
+qplot(data = df2, x=climate_yr, y=pr, color = climate_mon)
+```
+```{r}
+head(df2)
+```
+
+```{r}
+df3 = df2 %>%
+  dplyr::select(climate_mon:area_m, def, tmmx, pr)
+df3
+```
+
 mutate(gradebook, letter = ifelse(grade %in% 60:69, "D",
                                      ifelse(grade %in% 70:79, "C",
                                             ifelse(grade %in% 80:89, "B",
                                                    ifelse(grade %in% 90:99, "A", "F")))))
-```{r}
-spec1 <- df1 %>%
-  build_wider_spec(names_from = variable, values_from = c(estimate, moe))
-spec1
-```
-                                  
-```{r}
-spec2 = spec1 %>%
-  mutate(.name = paste0(variable, ifelse(.value == "apr", "_apr",
-                                         ifelse(.value == "may", "_may",
-                                                ifelse(.value == "jun", "_jun",
-                                                       ifelse(.value == "jul", "_jul",
-                                                              ifelse(.value == "aug", "_aug")))))))
-  
-```
+
 
 ```{r}
-spec2 <- spec1 %>%
-  mutate(.name = paste0(variable, ifelse(.value == "moe", "_moe", "")))
+df3 %>% pivot_wider(names_from = climate_mon, values_from = c(aet, def, tmmx, pr))
 ```
+
+
+
+
+
+
 ```{r}
 df_climate1_corr = df2 %>%
   mutate(year = as.numeric(climate_yr)) %>%
