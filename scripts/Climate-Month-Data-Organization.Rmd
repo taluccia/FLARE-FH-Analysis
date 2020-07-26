@@ -179,6 +179,47 @@ na_data
 ```{r}
 df1
 ```
+## Scale varaibles
+***
+### Data Details
+[Terra Climate](https://developers.google.com/earth-engine/datasets/catalog/IDAHO_EPSCOR_TERRACLIMATE)
+
+Name  |	Units	| Scale	| Description
+------|-------|-------|------------
+aet	  | mm	  |	0.1	  | Actual evapotranspiration,  
+def	  | mm	  |	0.1	  | Climate water deficit, 
+pdsi	|       |	0.01	| Palmer Drought Severity Index
+pet	  | mm	  |	0.1	  | Reference evapotranspiration (ASCE Penman-Montieth)
+pr	  | mm		|	      | Precipitation accumulation
+ro	  | mm	  |       |	Runoff, 
+soil	| mm	  | 0.1	  | Soil moisture, 
+srad	| W/m^2	|	0.1	  | Downward surface shortwave radiation
+swe	  | mm	  |		    | Snow water equivalent, 
+tmmn	| °C	  |	0.1	  | Minimum temperature
+tmmx	| °C	  |	0.1	  | Maximum temperature
+vap	  | kPa	  |	0.001	| Vapor pressure
+vpd   |	kPa	  |	0.01	| Vapor pressure deficit
+vs	  | m/s	  |	0.01	| Wind-speed at 10m
+
+***
+```{r}
+df_all = df1 %>% 
+  mutate(aet= aet*0.1) %>%
+  mutate(def = def*0.1) %>%
+  mutate(pdsi= pdsi*0.01) %>%
+  mutate(pet = pet*0.1) %>%
+  mutate(soil = soil*0.1) %>%
+  mutate(srad = srad*0.1) %>%
+  mutate(tmmn = tmmn*0.1) %>%
+  mutate(tmmx = tmmx*0.1) %>%
+  mutate(vap = vap*0.001) %>%
+  mutate(vpd = pet*0.01) %>%
+  mutate(vs = vs*0.01) %>%
+  mutate(fire_yr = as.factor(fire_yr))
+
+
+df_all
+```
 
 ```{r}
 df2 = df1 %>% 
@@ -192,6 +233,12 @@ df2
 ```
 
 
+```{r}
+df1_all = df_all %>% 
+  pivot_wider(names_from = climate_mon, values_from = c(aet, def, pdsi, pet, pr, ro, soil, srad, swe, tmmn, tmmx, vap, vpd, vs))
+
+df1_all
+```
 
 # Summarize data
 
@@ -291,6 +338,29 @@ p_mat
 cor_plot = ggcorrplot(corr)
 cor_plot
 ```
+
+## All
+
+```{r}
+df1_all_corr = df1_all %>%
+  mutate(year = as.numeric(climate_yr)) %>%
+  dplyr::select(-climate_yr, -fire_yr)
+
+```
+
+```{r}
+corr1 = round(cor(df1_all_corr), 1)  
+p_mat1 <- round(cor_pmat(df1_all_corr), 3)
+p_mat1
+```
+
+```{r}
+cor_plot1 = ggcorrplot(corr1)
+cor_plot1
+```
+
+
+
 ```{r eval=FALSE, include=FALSE}
 ggsave("../figures/2020-07-25_CorrPlot-Temp-PR-Snowoff.jpeg", plot = cor_plot, width = 6, height = 6, units = c("in"), dpi=600 )
 ```
