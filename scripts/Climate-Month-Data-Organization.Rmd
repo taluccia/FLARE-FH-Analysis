@@ -257,18 +257,16 @@ head(df2)
 
 ```{r}
 df3 = df2 %>%
-  dplyr::select(climate_mon:area_m, def, tmmx, pr)
+  dplyr::select(climate_yr:fire_yr, tmmx, pr)
 df3
 ```
 
-mutate(gradebook, letter = ifelse(grade %in% 60:69, "D",
-                                     ifelse(grade %in% 70:79, "C",
-                                            ifelse(grade %in% 80:89, "B",
-                                                   ifelse(grade %in% 90:99, "A", "F")))))
-
 
 ```{r}
-df3 %>% pivot_wider(names_from = climate_mon, values_from = c(aet, def, tmmx, pr))
+df4 = df3 %>% 
+  pivot_wider(names_from = climate_mon, values_from = c(aet, def, tmmx, pr))
+
+df4
 ```
 
 
@@ -277,11 +275,10 @@ df3 %>% pivot_wider(names_from = climate_mon, values_from = c(aet, def, tmmx, pr
 
 
 ```{r}
-df_climate1_corr = df2 %>%
+df_climate1_corr = df4 %>%
   mutate(year = as.numeric(climate_yr)) %>%
-  dplyr::select(area_ha, tmp_mx, pr, year)
+  dplyr::select(area_ha, year, def_apr:pr_may)
 
-str(df_climate1_corr,)
 ```
 
 ```{r}
